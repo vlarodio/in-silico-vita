@@ -1,0 +1,1 @@
+{"version":3,"file":"in-silico-vita.js","sources":["../src/index.ts"],"sourcesContent":["export function hello(name: string): string {\n  return `Hello, ${name}!`;\n}\n"],"names":["hello","name"],"mappings":"AAAO,SAASA,EAAMC,GAAsB;AAC1C,SAAO,UAAUA,CAAI;AACvB;"}

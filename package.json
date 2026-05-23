@@ -1,0 +1,27 @@
+{
+  "name": "in-silico-vita",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "files": ["dist"],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "tsc && vite build",
+    "prepublishOnly": "pnpm build"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0",
+    "vite": "^6.3.0",
+    "vite-plugin-dts": "^4.5.0"
+  }
+}
