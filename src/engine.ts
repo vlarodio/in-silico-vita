@@ -38,6 +38,7 @@ export function startLoop(
 
   let livePeaceful = 0, liveProtector = 0, liveAggressor = 0;
 
+  /** Один кадр симуляции: сброс, такты, сбор статистики, рендер */
   function tick() {
     if (state.resetRequested) {
       statsHistory.ticks.length = 0;

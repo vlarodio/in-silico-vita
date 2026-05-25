@@ -141,6 +141,7 @@ export function createControls(
   };
 }
 
+/** Создаёт слайдер скорости: label + range + span с текущим значением */
 function speedControl(state: SimState): HTMLElement {
   const label = document.createElement("label");
   label.textContent = "Speed: ";
@@ -165,6 +166,7 @@ function speedControl(state: SimState): HTMLElement {
   return label;
 }
 
+/** Создаёт <input type="number"> с заданным значением и стилем */
 function initInput(value: number): HTMLInputElement {
   const input = document.createElement("input");
   input.type = "number";
@@ -175,6 +177,7 @@ function initInput(value: number): HTMLInputElement {
   return input;
 }
 
+/** Оборачивает input в label с цветной точкой и подписью */
 function labeledInput(input: HTMLInputElement, title: string, color: string): HTMLElement {
   const wrap = document.createElement("label");
   wrap.style.display = "inline-flex";

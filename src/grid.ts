@@ -86,6 +86,7 @@ export function toroidalDist(
   return Math.sqrt(dx * dx + dy * dy);
 }
 
+/** Оборачивает координаты ячейки сетки по тору и возвращает линейный ключ */
 function wrapGridKey(gx: number, gy: number, gridW: number, gridH: number): number {
   gx = ((gx % gridW) + gridW) % gridW;
   gy = ((gy % gridH) + gridH) % gridH;

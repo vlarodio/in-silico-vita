@@ -107,6 +107,7 @@ export function renderStats(
   }
 }
 
+/** Рисует одну линию на графике по массиву значений */
 function drawCurve(
   ctx: CanvasRenderingContext2D,
   data: number[],
@@ -132,6 +133,7 @@ function drawCurve(
   ctx.stroke();
 }
 
+/** Рисует легенду: цветные квадраты с подписями, средняя агрессия, общая численность */
 function drawLegend(ctx: CanvasRenderingContext2D, avgAgg: number, total: number): void {
   const x = 10;
   let y = 10;
@@ -161,6 +163,7 @@ function drawLegend(ctx: CanvasRenderingContext2D, avgAgg: number, total: number
   ctx.fillText(`всего: ${total}`, x + 12, y);
 }
 
+/** Рисует tooltip при наведении: вертикальная линия + плашка со значениями */
 function drawHover(
   ctx: CanvasRenderingContext2D,
   history: StatsHistory,

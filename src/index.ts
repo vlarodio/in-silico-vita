@@ -89,6 +89,7 @@ export function createSimulation(
   return state;
 }
 
+/** Заполняет хранилище начальной популяцией согласно params */
 function spawnInitial(cells: ReturnType<typeof createCellStore>, params: SimParams): void {
   spawnCells(cells, params.initialPeacefulCount, 0, params);
   spawnCells(cells, params.initialProtectorCount, 50, params);
