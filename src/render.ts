@@ -24,10 +24,17 @@ export function render(
 
   // Клетки
   const { cells } = state;
+  const { peacefulMax, protectorMax } = state.params;
   for (let i = 0; i < cells.count; i++) {
     if (!cells.alive[i]) continue;
-    const hue = 120 * (1 - cells.aggression[i] / 100);
-    ctx.fillStyle = `hsl(${hue}, 70%, 50%)`;
+    const agg = cells.aggression[i];
+    if (agg <= peacefulMax) {
+      ctx.fillStyle = "hsl(120, 70%, 50%)";       // зелёный — мирная
+    } else if (agg <= protectorMax) {
+      ctx.fillStyle = "hsl(240, 70%, 50%)";       // синий   — защитник
+    } else {
+      ctx.fillStyle = "hsl(0, 70%, 50%)";         // красный — агрессор
+    }
     ctx.beginPath();
     ctx.arc(cells.x[i], cells.y[i], CELL_RADIUS, 0, Math.PI * 2);
     ctx.fill();
