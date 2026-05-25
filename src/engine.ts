@@ -31,7 +31,7 @@ export function startLoop(
   function tick() {
     if (state.running) {
       for (let s = 0; s < state.speed; s++) {
-        moveCells(state.cells, state.params);
+        moveCells(state.cells, state.resources, state.params);
         metabolize(state.cells, state.resources, state.params);
         regen(state.resources, state.params.resourceRegenRate, state.params.resourceK);
         handleInteractions(state.cells, state.params);

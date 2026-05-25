@@ -1,18 +1,21 @@
-import type { CellStore, SimParams } from "./types";
+import type { CellStore, ResourceGrid, SimParams } from "./types";
 import { wrap } from "./types";
 import { buildSpatialGrid, findNeighbors, toroidalDist } from "./grid";
 
-const CHEMOTAXIS_BIAS = 0.3; // вес направления к цели (0..1)
+const CHEMOTAXIS_BIAS = 0.3;
 
 /**
  * Перемещает каждую живую клетку и вычитает energyMoveCost.
- * Направление: случайное, но с хемотаксисом для защитников и агрессоров.
  *
- * Агрессоры (aggression > protectorMax) смещаются к ближайшей клетке с aggression < 100.
- * Защитники (peacefulMax < aggression ≤ protectorMax) — к ближайшему агрессору (> protectorMax).
- * Мирные движутся чисто случайно.
+ * Мирные (aggression ≤ peacefulMax) — хемотаксис к самой богатой ресурсной ячейке.
+ * Защитники (peacefulMax < aggression ≤ protectorMax) — хемотаксис к ближайшему агрессору.
+ * Агрессоры (aggression > protectorMax) — хемотаксис к ближайшей жертве (aggression < 100).
  */
-export function moveCells(cells: CellStore, params: SimParams): void {
+export function moveCells(
+  cells: CellStore,
+  resources: ResourceGrid,
+  params: SimParams,
+): void {
   const { worldWidth, worldHeight, baseSpeed, energyMoveCost } = params;
   const grid = params.chemotaxisRadius > 0
     ? buildSpatialGrid(cells, params)
@@ -24,7 +27,14 @@ export function moveCells(cells: CellStore, params: SimParams): void {
 
     let angle = Math.random() * Math.PI * 2;
 
-    if (grid) {
+    if (agg <= params.peacefulMax) {
+      // Мирная → к богатейшей ресурсной ячейке
+      const target = findRichestResourceCell(cells.x[i], cells.y[i], resources, params);
+      if (target) {
+        angle = biasAngle(angle, cells.x[i], cells.y[i], target.cx, target.cy);
+      }
+    } else if (grid) {
+      // Защитник или агрессор → к клетке-цели
       const target = findChemotaxisTarget(cells, grid, i, agg, params);
       if (target !== -1) {
         angle = biasAngle(angle, cells.x[i], cells.y[i], cells.x[target], cells.y[target]);
@@ -40,9 +50,52 @@ export function moveCells(cells: CellStore, params: SimParams): void {
 }
 
 /**
- * Ищет цель для хемотаксиса в радиусе chemotaxisRadius.
- * Возвращает индекс ближайшей подходящей клетки или -1.
+ * Находит координаты центра самой богатой ресурсной ячейки
+ * в радиусе chemotaxisRadius от клетки. Возвращает null если вокруг пусто.
  */
+function findRichestResourceCell(
+  x: number, y: number,
+  resources: ResourceGrid,
+  params: SimParams,
+): { cx: number; cy: number } | null {
+  const cellW = params.worldWidth / params.resourceGridWidth;
+  const cellH = params.worldHeight / params.resourceGridHeight;
+  const range = Math.ceil(params.chemotaxisRadius / Math.min(cellW, cellH));
+
+  const gx0 = Math.floor(x / cellW);
+  const gy0 = Math.floor(y / cellH);
+
+  let bestVal = -1;
+  let bestGx = 0;
+  let bestGy = 0;
+
+  for (let dy = -range; dy <= range; dy++) {
+    for (let dx = -range; dx <= range; dx++) {
+      let gx = gx0 + dx;
+      let gy = gy0 + dy;
+      gx = ((gx % params.resourceGridWidth) + params.resourceGridWidth) % params.resourceGridWidth;
+      gy = ((gy % params.resourceGridHeight) + params.resourceGridHeight) % params.resourceGridHeight;
+
+      const val = resources.data[gy * params.resourceGridWidth + gx];
+      const cellCx = (gx + 0.5) * cellW;
+      const cellCy = (gy + 0.5) * cellH;
+      const dist = toroidalDist(x, y, cellCx, cellCy, params.worldWidth, params.worldHeight);
+
+      if (dist <= params.chemotaxisRadius && val > bestVal) {
+        bestVal = val;
+        bestGx = gx;
+        bestGy = gy;
+      }
+    }
+  }
+
+  if (bestVal <= 0) return null;
+  return {
+    cx: (bestGx + 0.5) * cellW,
+    cy: (bestGy + 0.5) * cellH,
+  };
+}
+
 function findChemotaxisTarget(
   cells: CellStore,
   grid: Map<number, number[]>,
@@ -62,10 +115,8 @@ function findChemotaxisTarget(
     let valid = false;
 
     if (aggression > protectorMax) {
-      // Агрессор → любая с aggression < 100
       valid = na < 100;
     } else if (aggression > peacefulMax) {
-      // Защитник → агрессоры (> protectorMax)
       valid = na > protectorMax;
     }
 
@@ -85,10 +136,6 @@ function findChemotaxisTarget(
   return bestIdx;
 }
 
-/**
- * Смешивает случайный угол с направлением на цель.
- * CHEMOTAXIS_BIAS доля идёт к цели, остальное — случайность.
- */
 function biasAngle(
   randomAngle: number,
   x: number, y: number,
