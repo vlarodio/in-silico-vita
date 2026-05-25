@@ -1,54 +1,58 @@
 import type { SimParams } from "./types";
 
-/** Значения по умолчанию для всех параметров симуляции */
+/** Параметры симуляции по умолчанию */
 export const DEFAULT_PARAMS: SimParams = {
+  // ─── Мир ───
   worldWidth: 800,
   worldHeight: 600,
-  initialCellCount: 500,
-  initialAggression: 0,
 
-  // Энергия
+  // ─── Начальная популяция ───
+  initialPeacefulCount: 500,
+  initialProtectorCount: 0,
+  initialAggressorCount: 0,
+
+  // ─── Энергия ───
   energyCost: 1,
   energyMoveCost: 1,
   envBaseEnergy: 8,
   initialEnergy: 512,
 
-  // Пороги и эффективности: aggression 0..30 мирные (×1.0),
-  // 31..70 защитники (×0.8), 71..100 агрессоры (×0.4)
+  // ─── Пороги и эффективности ───
   peacefulMax: 30,
   protectorMax: 70,
   peacefulEfficiency: 1.0,
   protectorEfficiency: 0.8,
   aggressorEfficiency: 0.4,
 
-  // Ресурсная сетка: 64×48 ячеек, реген 4 за такт, макс 256 на ячейку
+  // ─── Ресурсная сетка ───
   resourceGridWidth: 64,
   resourceGridHeight: 48,
   resourceRegenRate: 4,
   resourceK: 256,
 
-  // Движение
+  // ─── Движение ───
   baseSpeed: 1,
   chemotaxisRadius: 60,
 
-  // Размножение: деление при энергии ≥ 410 (0.8 × initialEnergy), возраст ≥ 20, мутация σ = 5
+  // ─── Размножение ───
   energyDiv: 410,
   minDivisionAge: 20,
   mutationSigma: 5,
 
-  // Взаимодействия: только при касании — радиус 4 (клетка r=2 + зазор 2)
+  // ─── Взаимодействия ───
   taxRadius: 4,
   taxRate: 0.1,
   attackRadius: 4,
 
-  // Награды за убийство
+  // ─── Награды за убийство ───
   killAggressorReward: 50,
   killProtectorReward: 30,
 
-  // Инфекции: каждые 500 тактов 3 клетки +50 aggression, 0 - отключено
+  // ─── Инфекции ───
   infectionInterval: 0,
   infectionDelta: 50,
   infectionCount: 3,
 
+  // ─── Хранилище ───
   maxCellCount: 3000,
 };

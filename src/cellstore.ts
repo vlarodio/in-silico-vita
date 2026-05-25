@@ -19,13 +19,14 @@ export function createCellStore(capacity: number): CellStore {
 }
 
 /**
- * Добавляет count новых клеток в хранилище.
- * Шаблон новой клетки (агрессивность, энергия, возраст) берётся из params.
- * Координаты случайные в пределах [0, worldWidth) × [0, worldHeight).
+ * Добавляет count новых клеток с заданной агрессивностью.
+ * Координаты случайные в пределах мира.
+ * Энергия и возраст берутся из params.
  */
 export function spawnCells(
   store: CellStore,
   count: number,
+  aggression: number,
   params: SimParams,
 ): void {
   const limit = Math.min(count, store.capacity - store.count);
@@ -33,7 +34,7 @@ export function spawnCells(
     const idx = store.count;
     store.x[idx] = Math.random() * params.worldWidth;
     store.y[idx] = Math.random() * params.worldHeight;
-    store.aggression[idx] = params.initialAggression;
+    store.aggression[idx] = aggression;
     store.energy[idx] = params.initialEnergy;
     store.age[idx] = 0;
     store.alive[idx] = 1;
@@ -75,9 +76,7 @@ export function killRandomCells(store: CellStore, n: number): void {
 
 /**
  * Приводит количество живых клеток к target.
- * Если target больше текущего — добавляет недостающие (с параметрами по умолчанию).
- * Если меньше — убивает случайные.
- * Используется слайдером Cells в UI.
+ * Новые клетки создаются с нулевой агрессивностью.
  */
 export function setCellCount(
   store: CellStore,
@@ -87,7 +86,7 @@ export function setCellCount(
   target = Math.max(0, Math.min(target, store.capacity));
   if (target === store.count) return;
   if (target > store.count) {
-    spawnCells(store, target - store.count, params);
+    spawnCells(store, target - store.count, 0, params);
   } else {
     killRandomCells(store, store.count - target);
   }

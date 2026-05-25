@@ -41,10 +41,12 @@ export interface SimParams {
   worldWidth: number;
   /** Высота мира (совпадает с высотой canvas) */
   worldHeight: number;
-  /** Количество клеток при старте */
-  initialCellCount: number;
-  /** Начальное значение агрессивности (0 — мирная) */
-  initialAggression: number;
+  /** Начальное количество мирных клеток (aggression 0) */
+  initialPeacefulCount: number;
+  /** Начальное количество защитников (aggression 50) */
+  initialProtectorCount: number;
+  /** Начальное количество агрессоров (aggression 85) */
+  initialAggressorCount: number;
 
   // ─── Энергия ───
   /** Базовый расход энергии за такт (метаболизм) */
@@ -114,10 +116,11 @@ export interface SimParams {
   /** Сколько случайных клеток заражается за одну инфекцию */
   infectionCount: number;
 
-  /** Верхняя граница слайдера количества клеток; она же задаёт capacity хранилища */
+  /** Размер выделенных массивов (максимальная ёмкость хранилища) */
   maxCellCount: number;
 }
 
+/** Рантайм-состояние симуляции, объединяет данные и флаги управления */
 export interface SimState {
   params: SimParams;
   cells: CellStore;
@@ -127,8 +130,12 @@ export interface SimState {
   tick: number;
   /** Запущена ли симуляция */
   running: boolean;
+  /** Поставлена ли на паузу */
+  paused: boolean;
   /** Множитель скорости (тактов за кадр) */
   speed: number;
+  /** Флаг: при true движок сбросит статистику и ресурсы в начале такта */
+  resetRequested: boolean;
 }
 
 /**

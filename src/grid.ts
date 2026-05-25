@@ -70,6 +70,10 @@ export function findNeighbors(
   return result;
 }
 
+/**
+ * Тороидальное евклидово расстояние между двумя точками в мире.
+ * Учитывает заворот: расстояние через край может быть короче прямого.
+ */
 export function toroidalDist(
   x1: number, y1: number,
   x2: number, y2: number,
