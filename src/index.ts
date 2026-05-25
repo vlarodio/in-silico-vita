@@ -11,15 +11,7 @@ import { createControls } from "./ui";
  *
  * @param container — DOM-элемент, в который монтируются canvas и панель управления
  * @param options   — частичное переопределение параметров (объединяется с DEFAULT_PARAMS)
- * @returns Объект состояния симуляции (можно использовать для внешнего управления)
- *
- * Порядок инициализации:
- *   1. Параметры склеиваются из дефолтных и переданных
- *   2. Выделяется хранилище клеток и ресурсная сетка
- *   3. Спавнятся initialCellCount клеток в случайных позициях
- *   4. Создаётся canvas worldWidth × worldHeight и добавляется в container
- *   5. Монтируется панель управления (Start/Stop, Speed, Cells)
- *   6. Запускается игровой цикл через requestAnimationFrame
+ * @returns Объект состояния симуляции
  */
 export function createSimulation(
   container: HTMLElement,
@@ -44,6 +36,7 @@ export function createSimulation(
 
   spawnCells(cells, params.initialCellCount, params);
 
+  // Основной canvas
   const canvas = document.createElement("canvas");
   canvas.width = params.worldWidth;
   canvas.height = params.worldHeight;
@@ -52,10 +45,20 @@ export function createSimulation(
 
   const ctx = canvas.getContext("2d")!;
 
+  // Canvas для графика статистики
+  const statsCanvas = document.createElement("canvas");
+  statsCanvas.width = params.worldWidth;
+  statsCanvas.height = 100;
+  statsCanvas.style.display = "block";
+  statsCanvas.style.marginTop = "4px";
+  container.appendChild(statsCanvas);
+
+  const statsCtx = statsCanvas.getContext("2d")!;
+
   createControls(container, state, (targetCount) => {
     setCellCount(state.cells, targetCount, params);
   });
 
-  startLoop(state, ctx);
+  startLoop(state, ctx, statsCtx);
   return state;
 }

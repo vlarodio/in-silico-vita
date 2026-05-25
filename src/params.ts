@@ -29,6 +29,7 @@ export const DEFAULT_PARAMS: SimParams = {
 
   // Движение
   baseSpeed: 1,
+  chemotaxisRadius: 60,
 
   // Размножение: деление при энергии ≥ 300, возраст ≥ 20, мутация σ = 5
   energyDiv: 300,
