@@ -7,9 +7,9 @@ const CHEMOTAXIS_BIAS = 0.3;
 /**
  * Перемещает каждую живую клетку и вычитает energyMoveCost.
  *
- * Мирные (aggression ≤ peacefulMax) — хемотаксис к самой богатой ресурсной ячейке.
- * Защитники (peacefulMax < aggression ≤ protectorMax) — хемотаксис к ближайшему агрессору.
- * Агрессоры (aggression > protectorMax) — хемотаксис к ближайшей жертве (aggression < 100).
+ * Мирные (зелёные): хемотаксис к богатейшей ресурсной ячейке.
+ * Защитники (синие): приоритет 1) к агрессорам, 2) к мирным, 3) к еде.
+ * Агрессоры (красные): приоритет 1) к мирным, 2) к еде, синих игнорируют.
  */
 export function moveCells(
   cells: CellStore,
@@ -26,19 +26,43 @@ export function moveCells(
     const agg = cells.aggression[i];
 
     let angle = Math.random() * Math.PI * 2;
+    let tx: number | null = null;
+    let ty: number | null = null;
 
     if (agg <= params.peacefulMax) {
-      // Мирная → к богатейшей ресурсной ячейке
-      const target = findRichestResourceCell(cells.x[i], cells.y[i], resources, params);
-      if (target) {
-        angle = biasAngle(angle, cells.x[i], cells.y[i], target.cx, target.cy);
+      // Зелёный: к еде
+      const food = findRichestResourceCell(cells.x[i], cells.y[i], resources, params);
+      if (food) { tx = food.cx; ty = food.cy; }
+    } else if (agg <= params.protectorMax && grid) {
+      // Синий: 1) агрессор → 2) мирный → 3) еда
+      const aggro = findNearestCellByPredicate(cells, grid, i,
+        (a) => a > params.protectorMax, params);
+      if (aggro !== -1) {
+        tx = cells.x[aggro]; ty = cells.y[aggro];
+      } else {
+        const peaceful = findNearestCellByPredicate(cells, grid, i,
+          (a) => a <= params.peacefulMax, params);
+        if (peaceful !== -1) {
+          tx = cells.x[peaceful]; ty = cells.y[peaceful];
+        } else {
+          const food = findRichestResourceCell(cells.x[i], cells.y[i], resources, params);
+          if (food) { tx = food.cx; ty = food.cy; }
+        }
       }
     } else if (grid) {
-      // Защитник или агрессор → к клетке-цели
-      const target = findChemotaxisTarget(cells, grid, i, agg, params);
-      if (target !== -1) {
-        angle = biasAngle(angle, cells.x[i], cells.y[i], cells.x[target], cells.y[target]);
+      // Красный: 1) мирный → 2) еда, синих игнорирует
+      const peaceful = findNearestCellByPredicate(cells, grid, i,
+        (a) => a <= params.peacefulMax, params);
+      if (peaceful !== -1) {
+        tx = cells.x[peaceful]; ty = cells.y[peaceful];
+      } else {
+        const food = findRichestResourceCell(cells.x[i], cells.y[i], resources, params);
+        if (food) { tx = food.cx; ty = food.cy; }
       }
+    }
+
+    if (tx !== null) {
+      angle = biasAngle(angle, cells.x[i], cells.y[i], tx, ty!);
     }
 
     const dx = Math.cos(angle) * baseSpeed;
@@ -50,8 +74,41 @@ export function moveCells(
 }
 
 /**
+ * Находит индекс ближайшей клетки в chemotaxisRadius,
+ * удовлетворяющей предикату. Возвращает -1 если не найдено.
+ */
+function findNearestCellByPredicate(
+  cells: CellStore,
+  grid: Map<number, number[]>,
+  idx: number,
+  predicate: (aggression: number) => boolean,
+  params: SimParams,
+): number {
+  const cellSize = Math.max(params.attackRadius, params.taxRadius);
+  const neighbors = findNeighbors(cells, grid, idx, params.chemotaxisRadius, params, cellSize);
+
+  let bestIdx = -1;
+  let bestDist = Infinity;
+
+  for (const ni of neighbors) {
+    if (!predicate(cells.aggression[ni])) continue;
+    const d = toroidalDist(
+      cells.x[idx], cells.y[idx],
+      cells.x[ni], cells.y[ni],
+      params.worldWidth, params.worldHeight,
+    );
+    if (d < bestDist) {
+      bestDist = d;
+      bestIdx = ni;
+    }
+  }
+
+  return bestIdx;
+}
+
+/**
  * Находит координаты центра самой богатой ресурсной ячейки
- * в радиусе chemotaxisRadius от клетки. Возвращает null если вокруг пусто.
+ * в радиусе chemotaxisRadius. Возвращает null если вокруг пусто.
  */
 function findRichestResourceCell(
   x: number, y: number,
@@ -94,46 +151,6 @@ function findRichestResourceCell(
     cx: (bestGx + 0.5) * cellW,
     cy: (bestGy + 0.5) * cellH,
   };
-}
-
-function findChemotaxisTarget(
-  cells: CellStore,
-  grid: Map<number, number[]>,
-  idx: number,
-  aggression: number,
-  params: SimParams,
-): number {
-  const { chemotaxisRadius, peacefulMax, protectorMax } = params;
-  const cellSize = Math.max(params.attackRadius, params.taxRadius);
-  const neighbors = findNeighbors(cells, grid, idx, chemotaxisRadius, params, cellSize);
-
-  let bestIdx = -1;
-  let bestDist = Infinity;
-
-  for (const ni of neighbors) {
-    const na = cells.aggression[ni];
-    let valid = false;
-
-    if (aggression > protectorMax) {
-      valid = na < 100;
-    } else if (aggression > peacefulMax) {
-      valid = na > protectorMax;
-    }
-
-    if (!valid) continue;
-
-    const d = toroidalDist(
-      cells.x[idx], cells.y[idx],
-      cells.x[ni], cells.y[ni],
-      params.worldWidth, params.worldHeight,
-    );
-    if (d < bestDist) {
-      bestDist = d;
-      bestIdx = ni;
-    }
-  }
-
-  return bestIdx;
 }
 
 function biasAngle(

@@ -50,8 +50,8 @@ export function handleInteractions(
         (a) => a > protectorMax,
       );
       if (target !== -1) {
-        cells.energy[i] += killProtectorReward;
-        killCell(cells, target);
+        const attackerWon = resolveFight(cells, i, target, killProtectorReward, killAggressorReward);
+        if (!attackerWon) { i--; continue; }
         if (target <= i) i--;
       }
     } else {
@@ -61,8 +61,16 @@ export function handleInteractions(
         (a) => a < 100,
       );
       if (target !== -1) {
-        cells.energy[i] += killAggressorReward;
-        killCell(cells, target);
+        const targetAgg = cells.aggression[target];
+        if (targetAgg <= protectorMax) {
+          // Синий — бой по энергии
+          const attackerWon = resolveFight(cells, i, target, killAggressorReward, killProtectorReward);
+          if (!attackerWon) { i--; continue; }
+        } else {
+          // Зелёный или другой красный — мгновенное убийство
+          cells.energy[i] += killAggressorReward;
+          killCell(cells, target);
+        }
         if (target <= i) i--;
       }
     }
@@ -130,6 +138,31 @@ function findNearest(
   }
 
   return bestIdx;
+}
+
+/**
+ * Разрешает бой между атакующим и целью по энергии:
+ * проигрывает тот, у кого энергия меньше.
+ * При равенстве побеждает атакующий.
+ * Победитель получает награду, проигравший умирает.
+ * Возвращает true если атакующий выжил.
+ */
+function resolveFight(
+  cells: CellStore,
+  attackerIdx: number,
+  targetIdx: number,
+  attackerReward: number,
+  targetReward: number,
+): boolean {
+  if (cells.energy[attackerIdx] >= cells.energy[targetIdx]) {
+    cells.energy[attackerIdx] += attackerReward;
+    killCell(cells, targetIdx);
+    return true;
+  } else {
+    cells.energy[targetIdx] += targetReward;
+    killCell(cells, attackerIdx);
+    return false;
+  }
 }
 
 /**
