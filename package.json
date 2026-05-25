@@ -1,6 +1,6 @@
 {
   "name": "in-silico-vita",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Клеточная эволюционная симуляция",
   "type": "module",
   "license": "MIT",

@@ -2,7 +2,7 @@
 
 Клеточная эволюционная симуляция.
 
-[▶ Демо](https://vlarodio.github.io/in_silico_vita/)
+[▶ Демо](https://vlarodio.github.io/in-silico-vita/)
 
 ## Установка
 
