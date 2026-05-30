@@ -43,17 +43,26 @@ export function createSimulation(
   canvas.width = params.worldWidth;
   canvas.height = params.worldHeight;
   canvas.style.display = "block";
+  canvas.style.maxWidth = "100%";
+  canvas.style.height = "auto";
   container.appendChild(canvas);
   const ctx = canvas.getContext("2d")!;
 
   const statsCanvas = document.createElement("canvas");
-  statsCanvas.width = params.worldWidth;
   statsCanvas.height = 100;
   statsCanvas.style.display = "block";
+  statsCanvas.style.width = "100%";
   statsCanvas.style.marginTop = "4px";
   statsCanvas.style.cursor = "crosshair";
   container.appendChild(statsCanvas);
   const statsCtx = statsCanvas.getContext("2d")!;
+
+  // Синхронизация ширины stats-канваса с отображаемой шириной основного
+  const syncStatsWidth = () => {
+    statsCanvas.width = Math.floor(canvas.getBoundingClientRect().width);
+  };
+  syncStatsWidth();
+  new ResizeObserver(syncStatsWidth).observe(canvas);
 
   const controls = createControls(
     container, state,

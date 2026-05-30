@@ -113,21 +113,27 @@ export function createControls(
   };
 
   let wasActive = false;
+  let lastPeaceful = -1, lastProtector = -1, lastAggressor = -1;
 
   return {
     updateLiveCounts(peaceful: number, protector: number, aggressor: number) {
       const active = state.running;
-      startStopBtn.textContent = active ? "Stop" : "Start";
-      peacefulInput.disabled = active;
-      protectorInput.disabled = active;
-      aggressorInput.disabled = active;
-      pauseBtn.disabled = !active;
-      applyBtn.disabled = active;
+
+      // Меняем текст кнопки и disabled только при переходе актив↔неактивен
+      if (active !== wasActive) {
+        startStopBtn.textContent = active ? "Stop" : "Start";
+        peacefulInput.disabled = active;
+        protectorInput.disabled = active;
+        aggressorInput.disabled = active;
+        pauseBtn.disabled = !active;
+        applyBtn.disabled = active;
+      }
 
       if (active) {
-        peacefulInput.value = String(peaceful);
-        protectorInput.value = String(protector);
-        aggressorInput.value = String(aggressor);
+        // live-значения — только если изменились
+        if (peaceful !== lastPeaceful) { peacefulInput.value = String(peaceful); lastPeaceful = peaceful; }
+        if (protector !== lastProtector) { protectorInput.value = String(protector); lastProtector = protector; }
+        if (aggressor !== lastAggressor) { aggressorInput.value = String(aggressor); lastAggressor = aggressor; }
       } else if (wasActive) {
         // только что остановились — показать дефолты один раз
         peacefulInput.value = String(state.params.initialPeacefulCount);
@@ -135,6 +141,7 @@ export function createControls(
         aggressorInput.value = String(state.params.initialAggressorCount);
         pauseBtn.textContent = "Pause";
         state.paused = false;
+        lastPeaceful = lastProtector = lastAggressor = -1;
       }
       wasActive = active;
     },

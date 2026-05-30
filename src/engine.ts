@@ -30,7 +30,8 @@ export function startLoop(
 
   statsCanvas.addEventListener("mousemove", (e) => {
     const rect = statsCanvas.getBoundingClientRect();
-    hoverX = e.clientX - rect.left;
+    const cssX = e.clientX - rect.left;
+    hoverX = cssX * (statsCanvas.width / rect.width);
   });
   statsCanvas.addEventListener("mouseleave", () => {
     hoverX = null;
